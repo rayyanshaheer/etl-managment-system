@@ -43,6 +43,20 @@
                     
                     <dt class="col-sm-4">Last Updated:</dt>
                     <dd class="col-sm-8">{{ job.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                    
+                    <dt class="col-sm-4">Load Mode:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{{ 'warning' if job.load_mode == 'append' else 'success' }}">
+                            {{ job.load_mode.upper() }}
+                        </span>
+                        <br><small class="text-muted">
+                            {% if job.load_mode == 'append' %}
+                            New data will be added to existing data
+                            {% else %}
+                            Existing data will be replaced
+                            {% endif %}
+                        </small>
+                    </dd>
                 </dl>
             </div>
         </div>

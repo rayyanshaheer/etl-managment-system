@@ -25,6 +25,23 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label class="form-label">Load Mode *</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="load_mode" id="load_replace" value="replace" checked>
+                            <label class="form-check-label" for="load_replace">
+                                <i class="bi bi-arrow-clockwise"></i> Replace - Clear existing data and load fresh
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="load_mode" id="load_append" value="append">
+                            <label class="form-check-label" for="load_append">
+                                <i class="bi bi-plus-circle"></i> Append - Add new data to existing records
+                            </label>
+                        </div>
+                        <div class="form-text">Choose how to handle data when running this job multiple times</div>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label class="form-label">Data Source Type *</label>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="source_type" id="source_csv" value="csv" checked>
@@ -51,6 +68,22 @@
                     
                     <!-- API Section -->
                     <div id="api_section" class="source-section" style="display: none;">
+                        <div class="mb-3">
+                            <label for="test_api" class="form-label">Test APIs (Optional)</label>
+                            <select class="form-select" id="test_api" name="test_api">
+                                <option value="">-- Select a test API or enter custom URL below --</option>
+                                <option value="https://jsonplaceholder.typicode.com/users">JSONPlaceholder - Users</option>
+                                <option value="https://jsonplaceholder.typicode.com/posts">JSONPlaceholder - Posts</option>
+                                <option value="https://jsonplaceholder.typicode.com/todos">JSONPlaceholder - Todos</option>
+                                <option value="https://jsonplaceholder.typicode.com/comments">JSONPlaceholder - Comments</option>
+                                <option value="https://api.github.com/users">GitHub - Users</option>
+                                <option value="https://api.github.com/repos/microsoft/vscode/issues">GitHub - VSCode Issues</option>
+                                <option value="https://catfact.ninja/facts?limit=100">Cat Facts API</option>
+                                <option value="https://randomuser.me/api/?results=50">Random User API</option>
+                            </select>
+                            <div class="form-text">Select a test API to quickly populate the URL field</div>
+                        </div>
+                        
                         <div class="mb-3">
                             <label for="api_url" class="form-label">API URL *</label>
                             <input type="url" class="form-control" id="api_url" name="api_url" placeholder="https://api.example.com/data">
@@ -120,6 +153,16 @@
         csvRadio.addEventListener('change', updateSections);
         apiRadio.addEventListener('change', updateSections);
         updateSections();
+        
+        // Test API dropdown auto-fill
+        const testApiSelect = document.getElementById('test_api');
+        const apiUrlInput = document.getElementById('api_url');
+        
+        testApiSelect.addEventListener('change', function() {
+            if (this.value) {
+                apiUrlInput.value = this.value;
+            }
+        });
     });
 </script>
 {% endblock %}

@@ -31,11 +31,15 @@ def create_job():
             flash('Invalid source type', 'danger')
             return render_template('jobs/create.html')
         
+        # Get load mode
+        load_mode = request.form.get('load_mode', 'replace')
+        
         # Create job
         job = Job(
             name=job_name,
             description=description,
-            user_id=current_user.id
+            user_id=current_user.id,
+            load_mode=load_mode
         )
         db.session.add(job)
         db.session.flush()  # Get job.id without committing

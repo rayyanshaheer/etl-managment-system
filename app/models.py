@@ -38,6 +38,7 @@ class Job(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     table_name = db.Column(db.String(100), unique=True)  # Name of the table where data is loaded
+    load_mode = db.Column(db.String(20), default='replace')  # 'replace' or 'append'
     
     data_source = db.relationship('DataSource', backref='job', uselist=False, cascade='all, delete-orphan')
     etl_runs = db.relationship('ETLRun', backref='job', lazy=True, cascade='all, delete-orphan')

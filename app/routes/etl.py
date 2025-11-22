@@ -46,7 +46,7 @@ def run_etl(job_id):
             return redirect(url_for('jobs.view_job', job_id=job.id))
         
         # Load
-        error = load_data(df, job.table_name, etl_run, db)
+        error = load_data(df, job.table_name, etl_run, db, job.load_mode)
         if error:
             etl_run.status = 'failed'
             etl_run.error_message = error
