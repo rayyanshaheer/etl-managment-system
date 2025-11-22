@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Create Job - ETL System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-plus-circle"></i> Create New ETL Job</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('jobs.create_job') }}" enctype="multipart/form-data" id="jobForm">
+                    <div class="mb-3">
+                        <label for="job_name" class="form-label">Job Name *</label>
+                        <input type="text" class="form-control" id="job_name" name="job_name" required>
+                        <div class="form-text">A descriptive name for your ETL job</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        <div class="form-text">Optional description of what this job does</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Data Source Type *</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="source_type" id="source_csv" value="csv" checked>
+                            <label class="form-check-label" for="source_csv">
+                                <i class="bi bi-file-earmark-spreadsheet"></i> CSV File Upload
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="source_type" id="source_api" value="api">
+                            <label class="form-check-label" for="source_api">
+                                <i class="bi bi-cloud-download"></i> API Endpoint
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- CSV Upload Section -->
+                    <div id="csv_section" class="source-section">
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">Upload CSV File *</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv">
+                            <div class="form-text">Maximum file size: 16MB</div>
+                        </div>
+                    </div>
+                    
+                    <!-- API Section -->
+                    <div id="api_section" class="source-section" style="display: none;">
+                        <div class="mb-3">
+                            <label for="api_url" class="form-label">API URL *</label>
+                            <input type="url" class="form-control" id="api_url" name="api_url" placeholder="https://api.example.com/data">
+                            <div class="form-text">The URL endpoint to fetch data from</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="api_format" class="form-label">API Response Format *</label>
+                            <select class="form-select" id="api_format" name="api_format">
+                                <option value="json">JSON</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Create Job
+                        </button>
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle"></i> ETL Pipeline Info</h5>
+                <p class="card-text">Your ETL job will:</p>
+                <ol>
+                    <li><strong>Extract:</strong> Read data from CSV file or API</li>
+                    <li><strong>Transform:</strong> Clean column names, remove empty rows</li>
+                    <li><strong>Load:</strong> Save to SQLite database</li>
+                </ol>
+                <hr>
+                <p class="mb-0"><small class="text-muted">You can view the transformed data and logs after running the ETL pipeline.</small></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const csvRadio = document.getElementById('source_csv');
+        const apiRadio = document.getElementById('source_api');
+        const csvSection = document.getElementById('csv_section');
+        const apiSection = document.getElementById('api_section');
+        
+        function updateSections() {
+            if (csvRadio.checked) {
+                csvSection.style.display = 'block';
+                apiSection.style.display = 'none';
+                document.getElementById('csv_file').required = true;
+                document.getElementById('api_url').required = false;
+            } else {
+                csvSection.style.display = 'none';
+                apiSection.style.display = 'block';
+                document.getElementById('csv_file').required = false;
+                document.getElementById('api_url').required = true;
+            }
+        }
+        
+        csvRadio.addEventListener('change', updateSections);
+        apiRadio.addEventListener('change', updateSections);
+        updateSections();
+    });
+</script>
+{% endblock %}

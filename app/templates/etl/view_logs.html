@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}ETL Logs - Run #{{ etl_run.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-file-text"></i> ETL Logs: Run #{{ etl_run.id }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('jobs.view_job', job_id=etl_run.job_id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Job
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Run Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Status:</strong>
+                        {% if etl_run.status == 'success' %}
+                        <span class="badge bg-success">Success</span>
+                        {% elif etl_run.status == 'failed' %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% else %}
+                        <span class="badge bg-warning">Running</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Started:</strong> {{ etl_run.started_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Completed:</strong> {{ etl_run.completed_at.strftime('%Y-%m-%d %H:%M:%S') if etl_run.completed_at else '-' }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Duration:</strong> 
+                        {% if etl_run.completed_at %}
+                        {{ '%.2f'|format((etl_run.completed_at - etl_run.started_at).total_seconds()) }}s
+                        {% else %}
+                        -
+                        {% endif %}
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Rows Extracted:</strong> {{ etl_run.rows_extracted }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Rows Transformed:</strong> {{ etl_run.rows_transformed }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Rows Loaded:</strong> {{ etl_run.rows_loaded }}
+                    </div>
+                </div>
+                {% if etl_run.error_message %}
+                <hr>
+                <div class="alert alert-danger mb-0">
+                    <strong>Error:</strong> {{ etl_run.error_message }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-list-ul"></i> Detailed Logs</h5>
+    </div>
+    <div class="card-body">
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 150px;">Timestamp</th>
+                        <th style="width: 120px;">Stage</th>
+                        <th style="width: 100px;">Level</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="{% if log.log_level == 'error' %}table-danger{% elif log.log_level == 'warning' %}table-warning{% endif %}">
+                        <td><small>{{ log.timestamp.strftime('%H:%M:%S.%f')[:-3] }}</small></td>
+                        <td>
+                            <span class="badge bg-secondary">{{ log.stage }}</span>
+                        </td>
+                        <td>
+                            {% if log.log_level == 'error' %}
+                            <span class="badge bg-danger">Error</span>
+                            {% elif log.log_level == 'warning' %}
+                            <span class="badge bg-warning">Warning</span>
+                            {% else %}
+                            <span class="badge bg-info">Info</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.message }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle"></i> No logs available for this run.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

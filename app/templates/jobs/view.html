@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.name }} - ETL System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="bi bi-briefcase"></i> {{ job.name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <form method="POST" action="{{ url_for('etl.run_etl', job_id=job.id) }}" style="display: inline;">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-play-circle"></i> Run ETL
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('jobs.cleanup_stuck_jobs') }}" style="display: inline;">
+                <button type="submit" class="btn btn-warning" title="Clean up stuck jobs">
+                    <i class="bi bi-arrow-clockwise"></i> Cleanup
+                </button>
+            </form>
+        </div>
+        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Jobs
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Job Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Job Name:</dt>
+                    <dd class="col-sm-8">{{ job.name }}</dd>
+                    
+                    <dt class="col-sm-4">Description:</dt>
+                    <dd class="col-sm-8">{{ job.description or '-' }}</dd>
+                    
+                    <dt class="col-sm-4">Created:</dt>
+                    <dd class="col-sm-8">{{ job.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                    
+                    <dt class="col-sm-4">Last Updated:</dt>
+                    <dd class="col-sm-8">{{ job.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-database"></i> Data Source</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Type:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{{ 'primary' if job.data_source.source_type == 'csv' else 'info' }}">
+                            {{ job.data_source.source_type.upper() }}
+                        </span>
+                    </dd>
+                    
+                    {% if job.data_source.source_type == 'csv' %}
+                    <dt class="col-sm-4">File:</dt>
+                    <dd class="col-sm-8"><code>{{ job.data_source.file_path }}</code></dd>
+                    {% else %}
+                    <dt class="col-sm-4">API URL:</dt>
+                    <dd class="col-sm-8"><code>{{ job.data_source.api_url }}</code></dd>
+                    
+                    <dt class="col-sm-4">Format:</dt>
+                    <dd class="col-sm-8">{{ job.data_source.api_format.upper() }}</dd>
+                    {% endif %}
+                    
+                    <dt class="col-sm-4">Table Name:</dt>
+                    <dd class="col-sm-8"><code>{{ job.table_name }}</code></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if job.data_source.source_type == 'api' %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+    <strong><i class="bi bi-info-circle"></i> API Request Info:</strong>
+    <ul class="mb-0 mt-2">
+        <li>Timeout: 10 seconds</li>
+        <li>Retries: 3 attempts with exponential backoff</li>
+        <li>If API is slow or unavailable, the job will fail after ~30 seconds</li>
+        <li>Use the <strong>Cleanup</strong> button to fix any stuck jobs</li>
+    </ul>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> ETL Run History</h5>
+        {% if etl_runs %}
+        <a href="{{ url_for('etl.view_data', job_id=job.id) }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-table"></i> View Data
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if etl_runs %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Run ID</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Completed</th>
+                        <th>Rows</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in etl_runs %}
+                    <tr>
+                        <td>#{{ run.id }}</td>
+                        <td>
+                            {% if run.status == 'success' %}
+                            <span class="badge bg-success">Success</span>
+                            {% elif run.status == 'failed' %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% else %}
+                            <span class="badge bg-warning">Running</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ run.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</small></td>
+                        <td><small>{{ run.completed_at.strftime('%Y-%m-%d %H:%M:%S') if run.completed_at else '-' }}</small></td>
+                        <td>
+                            <small>
+                                E: {{ run.rows_extracted }}<br>
+                                T: {{ run.rows_transformed }}<br>
+                                L: {{ run.rows_loaded }}
+                            </small>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('etl.view_logs', run_id=run.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-text"></i> View Logs
+                            </a>
+                        </td>
+                    </tr>
+                    {% if run.error_message %}
+                    <tr>
+                        <td colspan="6" class="bg-light">
+                            <small class="text-danger"><strong>Error:</strong> {{ run.error_message }}</small>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle"></i> No ETL runs yet. Click "Run ETL" to start processing data.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
